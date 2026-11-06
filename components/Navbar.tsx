@@ -34,8 +34,6 @@ export default function Navbar() {
             className="h-7 w-auto object-contain sm:h-8"
           />
         </Link>
-
-        {/* Desktop links */}
         <div className="hidden items-center gap-8 text-sm font-medium text-neutral-300 md:flex">
           {navLinks.map((link) => (
             <Link
@@ -47,8 +45,6 @@ export default function Navbar() {
             </Link>
           ))}
         </div>
-
-        {/* Desktop auth actions */}
         <div className="hidden items-center gap-4 md:flex">
           <Link
             href="/sign-in"
@@ -57,14 +53,12 @@ export default function Navbar() {
             Sign In
           </Link>
           <Button
-            render={<Link href="/get-started" />}
+            render={<Link href="/sign-up" />}
             className="rounded-full bg-indigo-600 px-5 font-medium text-white shadow-md shadow-indigo-600/20 hover:bg-indigo-500"
           >
             Get Started
           </Button>
         </div>
-
-        {/* Mobile menu */}
         <Sheet>
           <SheetTrigger
             render={
@@ -122,7 +116,7 @@ export default function Navbar() {
               <SheetClose
                 render={
                   <Link
-                    href="/get-started"
+                    href="/sign-up"
                     className={cn(
                       buttonVariants(),
                       "w-full justify-center rounded-full bg-indigo-600 font-medium text-white shadow-md shadow-indigo-600/20 hover:bg-indigo-500"
