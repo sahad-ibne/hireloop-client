@@ -10,11 +10,19 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { FaGoogle } from "react-icons/fa"
 
-type AuthFormProps = {
-  mode: "sign-in" | "sign-up"
+export type AuthFormData = {
+  email: string
+  password: string
+  name?: string
+  confirmPassword?: string
 }
 
-export default function AuthForm({ mode }: AuthFormProps) {
+type AuthFormProps = {
+  mode: "sign-in" | "sign-up"
+  onSubmit?: (data: AuthFormData) => void | Promise<void>
+}
+
+export default function AuthForm({ mode, onSubmit }: AuthFormProps) {
   const [showPassword, setShowPassword] = useState(false)
   const isSignUp = mode === "sign-up"
 
@@ -26,14 +34,21 @@ export default function AuthForm({ mode }: AuthFormProps) {
     confirmPassword?.setCustomValidity("")
 
     const formData = new FormData(event.currentTarget)
-    const data = Object.fromEntries(formData.entries())
+    const data = Object.fromEntries(
+      formData.entries()
+    ) as unknown as AuthFormData
 
     if (isSignUp && data.password !== data.confirmPassword) {
       confirmPassword?.setCustomValidity("Passwords do not match")
       confirmPassword?.reportValidity()
       return
     }
-    console.log(`${isSignUp ? "Sign up" : "Sign in"} submitted`, data)
+
+    if (onSubmit) {
+      onSubmit(data)
+    } else {
+      console.log(`${isSignUp ? "Sign up" : "Sign in"} submitted`, data)
+    }
   }
 
   const handleGoogleSignIn = () => {
@@ -256,7 +271,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
             href={isSignUp ? "/sign-in" : "/sign-up"}
             className="font-semibold text-indigo-400 hover:text-indigo-300"
           >
-            {isSignUp ? "Sign in" : "Create account"}
+            {isSignUp ? "Sign-in" : "Create account"}
           </Link>
         </p>
       </div>
