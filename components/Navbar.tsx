@@ -1,5 +1,7 @@
+"use client"
 import Link from "next/link"
 import Image from "next/image"
+import { useRouter } from "next/navigation"
 import { MenuIcon } from "lucide-react"
 
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -13,6 +15,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
+import { useSession, signOut } from "@/lib/auth-client"
 
 const navLinks = [
   { href: "/jobs", label: "Browse Jobs" },
@@ -21,6 +24,20 @@ const navLinks = [
 ]
 
 export default function Navbar() {
+  const { data: session } = useSession()
+  const router = useRouter()
+
+  const handleSignOut = async () => {
+    await signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          router.push("/")
+          router.refresh()
+        },
+      },
+    })
+  }
+
   return (
     <header className="mx-auto w-full max-w-6xl px-4 py-4">
       <nav className="flex items-center justify-between rounded-full border border-neutral-800 bg-neutral-900/80 px-4 py-3 shadow-lg backdrop-blur-md sm:px-6">
@@ -46,18 +63,36 @@ export default function Navbar() {
           ))}
         </div>
         <div className="hidden items-center gap-4 md:flex">
-          <Link
-            href="/sign-in"
-            className="text-sm font-medium text-indigo-400 transition-colors duration-200 hover:text-indigo-300"
-          >
-            Sign In
-          </Link>
-          <Button
-            render={<Link href="/sign-up" />}
-            className="rounded-full bg-indigo-600 px-5 font-medium text-white shadow-md shadow-indigo-600/20 hover:bg-indigo-500"
-          >
-            Get Started
-          </Button>
+          {session?.user ? (
+            <>
+              <span className="text-[#EDEDEF]">
+                Welcome , {session.user.name}
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleSignOut}
+                className="rounded-full text-neutral-300 hover:bg-neutral-800 hover:text-white"
+              >
+                Sign Out
+              </Button>
+            </>
+          ) : (
+            <>
+              <Link
+                href="/sign-in"
+                className="text-sm font-medium text-indigo-400 transition-colors duration-200 hover:text-indigo-300"
+              >
+                Sign In
+              </Link>
+              <Button
+                render={<Link href="/sign-up" />}
+                className="rounded-full bg-indigo-600 px-5 font-medium text-white shadow-md shadow-indigo-600/20 hover:bg-indigo-500"
+              >
+                Get Started
+              </Button>
+            </>
+          )}
         </div>
         <Sheet>
           <SheetTrigger
@@ -103,29 +138,45 @@ export default function Navbar() {
               ))}
             </nav>
             <SheetFooter className="mt-auto flex-col gap-3 border-t border-neutral-800 p-4">
-              <SheetClose
-                render={
-                  <Link
-                    href="/sign-in"
-                    className="rounded-lg py-2 text-center text-sm font-medium text-indigo-400 transition-colors duration-200 hover:bg-neutral-800/60 hover:text-indigo-300"
-                  />
-                }
-              >
-                Sign In
-              </SheetClose>
-              <SheetClose
-                render={
-                  <Link
-                    href="/sign-up"
-                    className={cn(
-                      buttonVariants(),
-                      "w-full justify-center rounded-full bg-indigo-600 font-medium text-white shadow-md shadow-indigo-600/20 hover:bg-indigo-500"
-                    )}
-                  />
-                }
-              >
-                Get Started
-              </SheetClose>
+              {session?.user ? (
+                <SheetClose
+                  render={
+                    <Button
+                      variant="ghost"
+                      onClick={handleSignOut}
+                      className="w-full justify-center rounded-lg text-sm font-medium text-neutral-300 hover:bg-neutral-800/60 hover:text-white"
+                    />
+                  }
+                >
+                  Sign Out
+                </SheetClose>
+              ) : (
+                <>
+                  <SheetClose
+                    render={
+                      <Link
+                        href="/sign-in"
+                        className="rounded-lg py-2 text-center text-sm font-medium text-indigo-400 transition-colors duration-200 hover:bg-neutral-800/60 hover:text-indigo-300"
+                      />
+                    }
+                  >
+                    Sign In
+                  </SheetClose>
+                  <SheetClose
+                    render={
+                      <Link
+                        href="/sign-up"
+                        className={cn(
+                          buttonVariants(),
+                          "w-full justify-center rounded-full bg-indigo-600 font-medium text-white shadow-md shadow-indigo-600/20 hover:bg-indigo-500"
+                        )}
+                      />
+                    }
+                  >
+                    Get Started
+                  </SheetClose>
+                </>
+              )}
             </SheetFooter>
           </SheetContent>
         </Sheet>
