@@ -15,6 +15,7 @@ export type AuthFormData = {
   password: string
   name?: string
   confirmPassword?: string
+  role?: "seeker" | "recruiter" | "admin"
 }
 
 type AuthFormProps = {
@@ -128,6 +129,32 @@ export default function AuthForm({ mode, onSubmit }: AuthFormProps) {
                 className="h-11 rounded-xl border-neutral-800 bg-neutral-900/70 px-3 text-white placeholder:text-neutral-600 focus-visible:border-indigo-500"
               />
             </div>
+          )}
+
+          {isSignUp && (
+            <fieldset className="space-y-2">
+              <legend className="text-sm font-medium text-neutral-300">
+                Account type
+              </legend>
+              <div className="grid grid-cols-3 gap-2">
+                {(["seeker", "recruiter", "admin"] as const).map((role) => (
+                  <label
+                    key={role}
+                    className="flex cursor-pointer items-center justify-center rounded-xl border border-neutral-800 bg-neutral-900/70 px-2 py-3 text-sm capitalize text-neutral-300 has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-600/15 has-[:checked]:text-white"
+                  >
+                    <input
+                      type="radio"
+                      name="role"
+                      value={role}
+                      required
+                      defaultChecked={role === "seeker"}
+                      className="sr-only"
+                    />
+                    {role}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
           )}
 
           <div className="space-y-2">
