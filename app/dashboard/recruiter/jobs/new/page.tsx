@@ -10,11 +10,12 @@ import {
   Euro,
   ChevronDown,
 } from "lucide-react"
+import createJob, { type JobFormData } from "@/lib/actions/job"
 
 const JOB_TYPES = ["Full-time", "Part-time", "Contract", "Internship"]
 
 export default function NewJobPage() {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<JobFormData>({
     title: "",
     companyName: "",
     category: "Engineering & Tech",
@@ -38,16 +39,17 @@ export default function NewJobPage() {
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     console.log("Publishing Job:", formData)
     // Ekhane tomar backend API call (POST /jobs) add korbe
+    const result = await createJob(formData)
+    console.log("Jobsssssssss", result)
   }
 
   return (
     <div className="min-h-screen bg-[#111113] p-6 text-zinc-100 md:p-10">
       <form onSubmit={handleSubmit} className="mx-auto max-w-5xl space-y-6">
-        {/* Top Breadcrumb & Header */}
         <div className="flex flex-col gap-4 pb-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="mb-1 text-xs font-medium text-zinc-400">
@@ -71,8 +73,6 @@ export default function NewJobPage() {
             <ArrowRight className="h-4 w-4" />
           </button>
         </div>
-
-        {/* Section 1: Basic Information */}
         <div className="space-y-5 rounded-xl border border-zinc-800/80 bg-[#18181B] p-6">
           <div className="flex items-center gap-2.5">
             <span className="h-2 w-2 rounded-full bg-indigo-500"></span>
@@ -80,8 +80,6 @@ export default function NewJobPage() {
               1. Basic Information
             </h2>
           </div>
-
-          {/* Job Title */}
           <div>
             <label className="mb-2 block text-xs font-medium text-zinc-300">
               Job Title <span className="text-indigo-400">*</span>
@@ -96,8 +94,6 @@ export default function NewJobPage() {
               className="w-full rounded-lg border border-zinc-800 bg-[#222226] px-4 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 transition outline-none focus:border-indigo-500"
             />
           </div>
-
-          {/* Company Name & Job Category */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
               <label className="mb-2 block text-xs font-medium text-zinc-300">
@@ -140,8 +136,6 @@ export default function NewJobPage() {
               </div>
             </div>
           </div>
-
-          {/* Job Type Pills */}
           <div>
             <label className="mb-2 block text-xs font-medium text-zinc-300">
               Job Type <span className="text-indigo-400">*</span>
@@ -169,8 +163,6 @@ export default function NewJobPage() {
             </div>
           </div>
         </div>
-
-        {/* Section 2: Location, Compensation & Timeline */}
         <div className="space-y-5 rounded-xl border border-zinc-800/80 bg-[#18181B] p-6">
           <div className="flex items-center gap-2.5">
             <span className="h-2 w-2 rounded-full bg-indigo-500"></span>
@@ -178,8 +170,6 @@ export default function NewJobPage() {
               2. Location, Compensation & Timeline
             </h2>
           </div>
-
-          {/* Remote Work Toggle */}
           <div className="flex items-center justify-between rounded-xl border border-zinc-800 bg-[#222226] p-4">
             <div className="flex items-center gap-3.5">
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-500/15 text-indigo-400">
@@ -213,8 +203,6 @@ export default function NewJobPage() {
               />
             </button>
           </div>
-
-          {/* Location & Application Deadline */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
               <div className="mb-2 flex items-center justify-between">
@@ -253,8 +241,6 @@ export default function NewJobPage() {
               </div>
             </div>
           </div>
-
-          {/* Min Salary, Max Salary, Frequency */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div>
               <label className="mb-2 block text-xs font-medium text-zinc-300">
@@ -310,8 +296,6 @@ export default function NewJobPage() {
             </div>
           </div>
         </div>
-
-        {/* Section 3: Responsibilities & Requirements */}
         <div className="space-y-5 rounded-xl border border-zinc-800/80 bg-[#18181B] p-6">
           <div className="flex items-center gap-2.5">
             <span className="h-2 w-2 rounded-full bg-indigo-500"></span>
@@ -319,8 +303,6 @@ export default function NewJobPage() {
               3. Responsibilities & Requirements
             </h2>
           </div>
-
-          {/* Key Responsibilities */}
           <div>
             <label className="mb-2 block text-xs font-medium text-zinc-300">
               Key Responsibilities <span className="text-indigo-400">*</span>
@@ -335,8 +317,6 @@ export default function NewJobPage() {
               className="w-full resize-none rounded-lg border border-zinc-800 bg-[#222226] p-4 text-sm leading-relaxed text-zinc-100 placeholder-zinc-500 transition outline-none focus:border-indigo-500"
             />
           </div>
-
-          {/* Qualifications & Requirements */}
           <div>
             <label className="mb-2 block text-xs font-medium text-zinc-300">
               Qualifications & Requirements{" "}

@@ -99,7 +99,7 @@ const MenuItemByRole: Record<UserRole, DashboardMenuItem[]> = {
     {
       id: "add-job",
       name: "Add Job",
-      url: "/dashboard/recruiter/new",
+      url: "/dashboard/recruiter/jobs/new",
       icon: Plus,
     },
     {
