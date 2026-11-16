@@ -1,35 +1,75 @@
 "use client"
 
-import React, { useEffect, useState } from "react"
+import React, { useState, useEffect } from "react"
 import {
   Briefcase,
-  MapPin,
-  Calendar,
   Trash2,
   Edit3,
-  Search,
   Plus,
   Users,
+  MapPin,
+  Globe,
+  MoreVertical,
+  Code,
+  Palette,
+  Server,
+  Megaphone,
 } from "lucide-react"
 import Link from "next/link"
+import { getJobs } from "@/lib/api/jobs"
+import { deleteJob } from "@/lib/actions/job"
+import { toast } from "sonner"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000"
+const getCategoryDetails = (category: string) => {
+  switch (category?.toLowerCase()) {
+    case "design & creative":
+    case "design":
+      return {
+        icon: <Palette className="h-4 w-4 text-orange-400" />,
+        color: "text-orange-400",
+      }
+    case "product & management":
+    case "infrastructure":
+      return {
+        icon: <Server className="h-4 w-4 text-indigo-400" />,
+        color: "text-indigo-400",
+      }
+    case "marketing & sales":
+    case "marketing":
+      return {
+        icon: <Megaphone className="h-4 w-4 text-pink-400" />,
+        color: "text-pink-400",
+      }
+    default:
+      return {
+        icon: <Code className="h-4 w-4 text-cyan-400" />,
+        color: "text-cyan-400",
+      }
+  }
+}
 
 export default function ManageJobsPage() {
   const [jobs, setJobs] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState("")
 
-  // Fetch jobs from database backend
   useEffect(() => {
     const fetchJobs = async () => {
       try {
-        setLoading(true)
-        const res = await fetch(`${BASE_URL}/jobs`)
-        const data = await res.json()
+        const data = await getJobs()
         setJobs(Array.isArray(data) ? data : data.jobs || [])
       } catch (error) {
-        console.error("Failed to fetch jobs:", error)
+        console.error("Failed to fetch jobs", error)
       } finally {
         setLoading(false)
       }
@@ -37,31 +77,19 @@ export default function ManageJobsPage() {
     fetchJobs()
   }, [])
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this job?")) return
+  const handleDelete = async (jobId: string, jobTitle: string) => {
     try {
-      const res = await fetch(`${BASE_URL}/jobs/${id}`, {
-        method: "DELETE",
-      })
-      if (res.ok) {
-        setJobs((prev) => prev.filter((job) => job._id !== id && job.id !== id))
-      } else {
-        alert("Failed to delete job")
-      }
+      await deleteJob(jobId)
+      setJobs((prev) => prev.filter((job) => (job._id || job.id) !== jobId))
+      toast.success(`Job "${jobTitle}" deleted successfully!`)
     } catch (error) {
-      console.error("Error deleting job:", error)
+      console.error("Failed to delete job", error)
+      toast.error("Failed to delete the job. Please try again.")
     }
   }
 
-  const filteredJobs = jobs.filter(
-    (job) =>
-      job.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      job.category?.toLowerCase().includes(searchTerm.toLowerCase())
-  )
-
   return (
     <div className="min-h-screen space-y-6 bg-[#111113] p-6 text-zinc-100 md:p-10">
-      {/* Top Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="mb-1 text-xs font-medium text-zinc-400">
@@ -72,116 +100,204 @@ export default function ManageJobsPage() {
             Manage Job Listings
           </h1>
           <p className="mt-1 text-sm text-zinc-400">
-            Monitor, edit, or remove active job listings posted across the
-            network.
+            Review live listings, monitor applicants, and update job details
+            across your organization.
           </p>
         </div>
 
         <Link
-          href="/dashboard/recruiter/new"
+          href="/dashboard/recruiter/jobs/new"
           className="inline-flex cursor-pointer items-center justify-center gap-2 self-start rounded-lg bg-[#6366F1] px-5 py-2.5 text-sm font-medium text-white shadow-lg shadow-indigo-500/20 transition-all hover:bg-[#5558E6] sm:self-auto"
         >
           <Plus className="h-4 w-4" />
           Post New Job
         </Link>
       </div>
+      <div className="overflow-hidden rounded-xl border border-zinc-800/80 bg-[#18181B] shadow-xl">
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-left">
+            <thead>
+              <tr className="border-b border-zinc-800 bg-[#141417] text-[11px] font-semibold tracking-wider text-zinc-400 uppercase">
+                <th className="px-5 py-4">Job Title & Dept</th>
+                <th className="px-5 py-4">Company & Location</th>
+                <th className="px-5 py-4">Type</th>
+                <th className="px-5 py-4">Compensation</th>
+                <th className="px-5 py-4">Applicants</th>
+                <th className="px-5 py-4">Status</th>
+                <th className="px-5 py-4">Deadline</th>
+                <th className="px-5 py-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-800/60 text-sm">
+              {loading ? (
+                <tr>
+                  <td
+                    colSpan={8}
+                    className="animate-pulse py-12 text-center text-zinc-400"
+                  >
+                    Loading jobs...
+                  </td>
+                </tr>
+              ) : jobs.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="py-12 text-center text-zinc-400">
+                    <Briefcase className="mx-auto mb-2 h-8 w-8 stroke-[1.5] text-zinc-600" />
+                    <p className="text-sm font-medium text-zinc-300">
+                      No jobs found
+                    </p>
+                  </td>
+                </tr>
+              ) : (
+                jobs.map((job: any) => {
+                  const jobId = job._id || job.id
+                  const catDetails = getCategoryDetails(job.category)
+                  const isExpired =
+                    job.status === "Expired" ||
+                    (job.deadline && new Date(job.deadline) < new Date())
 
-      {/* Search Bar */}
-      <div className="flex items-center gap-3 rounded-xl border border-zinc-800/80 bg-[#18181B] p-4">
-        <Search className="ml-1 h-4 w-4 text-zinc-400" />
-        <input
-          type="text"
-          placeholder="Search by job title or category..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full bg-transparent text-sm text-zinc-100 placeholder-zinc-500 outline-none"
-        />
-      </div>
-
-      {/* Jobs List */}
-      <div className="space-y-4">
-        {loading ? (
-          <div className="rounded-xl border border-zinc-800/80 bg-[#18181B] p-12 text-center text-zinc-400">
-            <p className="animate-pulse text-sm">
-              Loading job listings from database...
-            </p>
-          </div>
-        ) : filteredJobs.length === 0 ? (
-          <div className="rounded-xl border border-zinc-800/80 bg-[#18181B] p-12 text-center text-zinc-400">
-            <Briefcase className="mx-auto mb-3 h-10 w-10 stroke-[1.5] text-zinc-600" />
-            <p className="text-base font-medium text-zinc-300">No jobs found</p>
-            <p className="mt-1 text-xs text-zinc-500">
-              Post a new job to start receiving applications.
-            </p>
-          </div>
-        ) : (
-          filteredJobs.map((job) => {
-            const jobId = job._id || job.id
-            return (
-              <div
-                key={jobId}
-                className="flex flex-col justify-between gap-4 rounded-xl border border-zinc-800/80 bg-[#18181B] p-5 transition-all hover:border-zinc-700 md:flex-row md:items-center"
-              >
-                {/* Job Info */}
-                <div className="space-y-1.5">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="text-base font-semibold text-white">
-                      {job.title}
-                    </h3>
-                    <span className="rounded-full border border-indigo-500/20 bg-indigo-500/10 px-2.5 py-0.5 text-[11px] font-medium text-indigo-400">
-                      {job.jobType}
-                    </span>
-                    {job.isRemote && (
-                      <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-medium text-emerald-400">
-                        Remote
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-4 text-xs text-zinc-400">
-                    <span className="flex items-center gap-1.5">
-                      <MapPin className="h-3.5 w-3.5 text-zinc-500" />
-                      {job.location || "Remote / N/A"}
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <Calendar className="h-3.5 w-3.5 text-zinc-500" />
-                      Deadline:{" "}
-                      {job.deadline ? job.deadline.split("T")[0] : "N/A"}
-                    </span>
-                    <span className="flex items-center gap-1.5 font-medium text-indigo-300">
-                      €{job.minSalary} - €{job.maxSalary} {job.frequency}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Actions & Applicants */}
-                <div className="flex items-center justify-between gap-3 border-t border-zinc-800 pt-3 md:justify-end md:border-t-0 md:pt-0">
-                  <div className="flex items-center gap-1.5 rounded-lg border border-zinc-800 bg-[#222226] px-3 py-1.5 text-xs text-zinc-400">
-                    <Users className="h-3.5 w-3.5 text-indigo-400" />
-                    <span>{job.applicantsCount || 0} Applicants</span>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => alert(`Edit feature for: ${job.title}`)}
-                      className="cursor-pointer rounded-lg border border-zinc-800 bg-[#222226] p-2 text-zinc-300 transition hover:bg-zinc-800 hover:text-white"
-                      title="Edit Job"
+                  return (
+                    <tr
+                      key={jobId}
+                      className="group transition hover:bg-zinc-800/40"
                     >
-                      <Edit3 className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(jobId)}
-                      className="cursor-pointer rounded-lg border border-red-500/20 bg-red-500/10 p-2 text-red-400 transition hover:bg-red-500/20"
-                      title="Delete Job"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )
-          })
-        )}
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-zinc-800 bg-[#222226]">
+                            {catDetails.icon}
+                          </div>
+                          <div>
+                            <div className="font-semibold text-white">
+                              {job.title}
+                            </div>
+                            <div
+                              className={`mt-0.5 text-xs font-medium ${catDetails.color}`}
+                            >
+                              {job.category || "Engineering"}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="font-medium text-zinc-200">
+                          {job.companyName || "HirePulse Network"}
+                        </div>
+                        <div className="mt-0.5 flex items-center gap-1.5 text-xs text-zinc-400">
+                          {job.isRemote ? (
+                            <>
+                              <Globe className="h-3.5 w-3.5 shrink-0 text-zinc-500" />
+                              <span>
+                                Remote ({job.location || "Worldwide"})
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <MapPin className="h-3.5 w-3.5 shrink-0 text-zinc-500" />
+                              <span>{job.location || "N/A"}</span>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-5 py-4">
+                        <span className="rounded-full border border-zinc-800 bg-[#222226] px-3 py-1 text-xs font-medium text-zinc-300">
+                          {job.jobType || "Full-time"}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4 font-medium text-zinc-200">
+                        €{job.minSalary} – €{job.maxSalary} /{" "}
+                        {job.frequency === "per hour"
+                          ? "hr"
+                          : job.frequency === "per month"
+                            ? "mo"
+                            : "yr"}
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-1.5 font-medium text-zinc-300">
+                          <Users className="h-4 w-4 text-indigo-400" />
+                          <span>{job.applicantsCount || 0} Candidates</span>
+                        </div>
+                      </td>
+                      <td className="px-5 py-4">
+                        {isExpired ? (
+                          <span className="inline-flex items-center gap-1.5 rounded-full border border-zinc-700/50 bg-zinc-800/60 px-2.5 py-1 text-xs font-medium text-zinc-400">
+                            <span className="h-1.5 w-1.5 rounded-full bg-zinc-500"></span>
+                            Expired
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-400">
+                            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400"></span>
+                            Active
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="text-xs font-medium text-zinc-200">
+                          {job.deadline ? job.deadline.split("T")[0] : "N/A"}
+                        </div>
+                        <div className="mt-0.5 text-[11px] text-zinc-500">
+                          {isExpired ? "Closed" : "Active listing"}
+                        </div>
+                      </td>
+                      <td className="px-5 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-zinc-800 bg-[#222226] px-3 py-1.5 text-xs font-medium text-zinc-200 transition hover:bg-zinc-800 hover:text-white"
+                            title="Update Job"
+                          >
+                            <Edit3 className="h-3.5 w-3.5 text-indigo-400" />
+                            Update
+                          </button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <button
+                                className="cursor-pointer rounded-lg border border-red-500/20 bg-red-500/10 p-2 text-red-400 transition hover:bg-red-500/20"
+                                title="Delete Job"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent className="border border-zinc-800 bg-[#18181B] text-zinc-100">
+                              <AlertDialogHeader>
+                                <AlertDialogTitle className="text-white">
+                                  Are you absolutely sure?
+                                </AlertDialogTitle>
+                                <AlertDialogDescription className="text-zinc-400">
+                                  This action cannot be undone. This will
+                                  permanently delete the job listing
+                                  <span className="font-semibold text-white">
+                                    {" "}
+                                    "{job.title}"
+                                  </span>{" "}
+                                  from the database.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel className="border-zinc-700 bg-zinc-800 text-zinc-200 hover:bg-zinc-700 hover:text-white">
+                                  Cancel
+                                </AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDelete(jobId, job.title)}
+                                  className="bg-red-600 font-medium text-white hover:bg-red-700"
+                                >
+                                  Yes, Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                          <button
+                            className="cursor-pointer rounded-lg border border-zinc-800 bg-[#222226] p-2 text-zinc-400 transition hover:bg-zinc-800 hover:text-zinc-200"
+                            title="More Options"
+                          >
+                            <MoreVertical className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   )

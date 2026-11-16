@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState } from "react"
+import { useRouter } from "next/navigation"
 import {
   ArrowRight,
   Building2,
@@ -11,10 +12,12 @@ import {
   ChevronDown,
 } from "lucide-react"
 import createJob, { type JobFormData } from "@/lib/actions/job"
+import { toast } from "sonner"
 
 const JOB_TYPES = ["Full-time", "Part-time", "Contract", "Internship"]
 
 export default function NewJobPage() {
+  const router = useRouter()
   const [formData, setFormData] = useState<JobFormData>({
     title: "",
     companyName: "",
@@ -41,10 +44,14 @@ export default function NewJobPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("Publishing Job:", formData)
-    // Ekhane tomar backend API call (POST /jobs) add korbe
-    const result = await createJob(formData)
-    console.log("Jobsssssssss", result)
+    try {
+      await createJob(formData)
+      toast.success("Job published successfully!")
+      router.push("/dashboard/recruiter/jobs")
+    } catch (error) {
+      console.error("Failed to publish job", error)
+      toast.error("Failed to publish the job. Please try again.")
+    }
   }
 
   return (

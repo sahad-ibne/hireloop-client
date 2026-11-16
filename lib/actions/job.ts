@@ -23,6 +23,16 @@ const createJob = async (data: JobFormData) => {
     },
     body: JSON.stringify(data),
   })
+  if (!res.ok) {
+    throw new Error("Failed to publish job")
+  }
   return res.json()
 }
 export default createJob
+
+export const deleteJob = async (jobId: string) => {
+  const res = await fetch(`${BASE_URL}/jobs/${jobId}`, {
+    method: "DELETE",
+  })
+  return res.json
+}
