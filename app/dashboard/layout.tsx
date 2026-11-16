@@ -5,7 +5,7 @@ const DLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <SidebarProvider>
       <DashboardSidebar />
-      <main>
+      <main className="flex-1 overflow-y-auto p-8">
         <SidebarTrigger />
         {children}
       </main>
