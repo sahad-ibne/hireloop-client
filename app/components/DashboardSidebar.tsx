@@ -23,6 +23,7 @@ import {
   FileText,
   LayoutDashboard,
   LogOut,
+  Plus,
   Settings,
   Users,
   type LucideIcon,
@@ -94,6 +95,12 @@ const MenuItemByRole: Record<UserRole, DashboardMenuItem[]> = {
       name: "Manage Jobs",
       url: "/dashboard/recruiter/jobs",
       icon: BriefcaseBusiness,
+    },
+    {
+      id: "add-job",
+      name: "Add Job",
+      url: "/dashboard/recruiter/new",
+      icon: Plus,
     },
     {
       id: "applications",

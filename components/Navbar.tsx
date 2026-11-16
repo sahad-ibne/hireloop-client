@@ -17,14 +17,19 @@ import {
 import { cn } from "@/lib/utils"
 import { useSession, signOut } from "@/lib/auth-client"
 
-const navLinks = [
-  { href: "/jobs", label: "Browse Jobs" },
-  { href: "/company", label: "Company" },
-  { href: "/pricing", label: "Pricing" },
-]
-
 export default function Navbar() {
   const { data: session } = useSession()
+
+  const navLinks = [
+    { href: "/jobs", label: "Browse Jobs" },
+    { href: "/company", label: "Company" },
+    { href: "/pricing", label: "Pricing" },
+    {
+      href: `/dashboard/${session?.user.role || "seeker"}`,
+      label: "Dashboard",
+    },
+  ] as const
+
   const router = useRouter()
 
   const handleSignOut = async () => {
